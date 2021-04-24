@@ -9,8 +9,9 @@ import (
 )
 
 type OpenJudge struct {
-	Host string
-	Port string
+	Host     string
+	Port     string
+	DataPath string
 }
 
 type MysqlConfig struct {
@@ -47,6 +48,7 @@ func initSectionConfig(sr *reflect.Value, dict map[string]string) {
 				value.SetInt(int64(number))
 			}
 		}
+		fmt.Println(name, dict[name])
 	}
 }
 

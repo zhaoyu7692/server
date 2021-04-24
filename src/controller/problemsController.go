@@ -5,23 +5,32 @@ import (
 	"io/ioutil"
 	"main/model"
 	"main/mysql"
+	"main/utils"
 	"net/http"
 )
 
 type problemsResponseModel struct {
-	ItemList []model.Problem `json:"item_list"`
-	model.ResponsePaginationModel
+	Problems struct {
+		ItemList []model.Problem `json:"item_list"`
+		model.ResponsePaginationModel
+	} `json:"problems"`
+	model.ResponseBaseModel
 }
 
 type ProblemsController struct {
-
 }
 
 func (c *ProblemsController) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		return
 	}
-
+	responseModel := problemsResponseModel{}
+	defer func() {
+		if stream, err := json.Marshal(responseModel); err == nil {
+			_, _ = w.Write(stream)
+		}
+	}()
+	responseModel.Code = model.PublicFail
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return
@@ -31,25 +40,19 @@ func (c *ProblemsController) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var problems []model.Problem
-	if err := mysql.DBConn.Select(&problems, "SELECT PID, TITLE, DIFF, ACCEPT, TOTAL FROM PROBLEM"); err != nil {
+	offset := utils.Max((page.Page-1)*page.Size, 0)
+	sql := "SELECT p.PID, TITLE, DIFF, ACCEPT, TOTAL FROM problem as p, contest_problem_mapping as cp WHERE CID = 0 AND p.PID = cp.PID ORDER BY `INDEX` LIMIT ?, ?"
+	if err := mysql.DBConn.Select(&responseModel.Problems.ItemList, sql, offset, page.Size); err != nil {
 		return
 	}
-	var responseModel problemsResponseModel
-	if err := mysql.DBConn.Get(&responseModel.Total, "SELECT COUNT(PID) FROM PROBLEM"); err != nil {
-		return
-	}
-	responseModel.ItemList = problems
-	responseModel.Size = page.Size
 
-	stream, err := json.Marshal(responseModel)
-	if err != nil {
+	if err := mysql.DBConn.Get(&responseModel.Problems.Total, "SELECT COUNT(PID) FROM contest_problem_mapping WHERE CID = 0"); err != nil {
 		return
 	}
-	_, _ = w.Write(stream)
+	responseModel.Problems.Size = page.Size
+	responseModel.Code = model.Success
 }
 
 func init() {
 	RegisterController("/problems/", new(ProblemsController))
-	//runtime.ReadMemStats()
 }

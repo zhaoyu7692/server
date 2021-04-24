@@ -4,42 +4,42 @@ import (
 	"encoding/json"
 	"main/model"
 	"main/mysql"
+	"main/utils"
+	"math"
 	"net/http"
-	"strconv"
 )
 
 type problemResponseModel struct {
-	model.Problem
-	Samples []model.Example `json:"samples"`
+	Problem model.Problem `json:"problem"`
+	model.ResponseBaseModel
 }
 
 type ProblemController struct {
 }
 
-func (c *ProblemController) ServeHTTP(w http.ResponseWriter, r *http.Request)  {
-	if r.Method == "POST" {
+func (c *ProblemController) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
 		return
 	}
-
-	query := r.URL.Query()
-	problemID, err := strconv.Atoi(query.Get("problemID"))
-	if err != nil {
-		return
-	}
-
 	var responseModel problemResponseModel
-	if err := mysql.DBConn.Get(&responseModel.Problem, "SELECT PID, TITLE, DESCRIPTION, DIFF, INPUT, OUTPUT, SOURCE, TIME_LIMIT, MEMORY_LIMIT, ACCEPT, TOTAL FROM PROBLEM WHERE PID = ?", problemID); err != nil {
+	defer func() {
+		if stream, err := json.Marshal(responseModel); err == nil {
+			_, _ = w.Write(stream)
+		}
+	}()
+	responseModel.Code = model.PublicFail
+	query := r.URL.Query()
+	cid := utils.StringConstraint(query.Get("cid"), 0, math.MaxInt64, math.MaxInt64)
+	index := utils.StringConstraint(query.Get("index"), 0, math.MaxInt64, math.MaxInt64)
+	sql := "SELECT p.PID, TITLE, DESCRIPTION, DIFF, INPUT, OUTPUT, SOURCE, TIME_LIMIT, MEMORY_LIMIT FROM problem as p, contest_problem_mapping as cp WHERE cp.CID = ? AND cp.`INDEX` = ? AND cp.PID = p.PID"
+	if err := mysql.DBConn.Get(&responseModel.Problem, sql, cid, index); err != nil {
 		return
 	}
-	if err := mysql.DBConn.Select(&responseModel.Samples, "SELECT INPUT, OUTPUT FROM SAMPLE WHERE PID = ?", problemID); err != nil {
+	sql = "SELECT INPUT, OUTPUT FROM SAMPLE as s, contest_problem_mapping as cp WHERE s.PID = cp.PID AND cp.CID = ? AND cp.`INDEX` = ?"
+	if err := mysql.DBConn.Select(&responseModel.Problem.Sample, sql, cid, index); err != nil {
 		return
 	}
-
-	stream, err := json.Marshal(responseModel)
-	if err != nil {
-		return
-	}
-	_, _ = w.Write(stream)
+	responseModel.Code = model.Success
 }
 
 func init() {

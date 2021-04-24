@@ -5,11 +5,11 @@ type Example struct {
 	Sid    int64  `json:"sid,omitempty"`
 	Input  string `json:"input" db:"INPUT"`
 	Output string `json:"output" db:"OUTPUT"`
-	Timestamp
+	//Timestamp
 }
 
 type Problem struct {
-	Pid               int64    `json:"pid" db:"PID"`
+	Pid               int64     `json:"pid" db:"PID"`
 	Title             string    `json:"title,omitempty" db:"TITLE"`
 	Description       string    `json:"description,omitempty" db:"DESCRIPTION"`
 	Difficulty        int64     `json:"difficulty,omitempty" db:"DIFF"`
@@ -22,5 +22,5 @@ type Problem struct {
 	Total             int64     `json:"total" db:"TOTAL"`
 	Sample            []Example `json:"samples,omitempty"`
 	Source            string    `json:"source,omitempty" db:"SOURCE"`
-	Timestamp
+	//Timestamp
 }

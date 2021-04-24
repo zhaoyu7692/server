@@ -2,57 +2,49 @@ package controller
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"main/model"
 	"main/mysql"
+	"main/utils"
+	"math"
 	"net/http"
 )
 
-type submitStatusModel struct {
-	ItemList []model.SubmitStatus `json:"item_list"`
-	model.ResponsePaginationModel
+type submitStatusResponseModel struct {
+	SubmitStatus struct {
+		ItemList []model.Submit `json:"item_list"`
+		model.ResponsePaginationModel
+	} `json:"submit_status"`
+	model.ResponseBaseModel
 }
 
 type SubmitStatusController struct {
-
 }
 
 func (c *SubmitStatusController) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "POST" {
+	if r.Method != "GET" {
 		return
 	}
-
-	body, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return
-	}
-	var page model.RequestPaginationModel
-	if err = json.Unmarshal(body, &page); err != nil {
-		return
-	}
-
-
-	var submitStatus []model.SubmitStatus
-	if err := mysql.DBConn.Select(&submitStatus, "SELECT RID, UID, LANGUAGE, STATUS, RUN_TIME, RUN_MEMORY, GMT_CREATED FROM SUBMIT LIMIT ?, ?", page.Offset, page.Size); err != nil {
-		return
-	}
-	for index, _ := range submitStatus {
-		if err := mysql.DBConn.Get(&submitStatus[index], "SELECT USERNAME FROM USER WHERE ID = ?", submitStatus[index].Uid); err != nil {
-			continue
+	var responseModel submitStatusResponseModel
+	defer func() {
+		if stream, err := json.Marshal(responseModel); err == nil {
+			_, _ = w.Write(stream)
 		}
-	}
-	var responseModel submitStatusModel
-	if err := mysql.DBConn.Get(&responseModel.Total, "SELECT COUNT(RID) FROM SUBMIT"); err != nil {
+	}()
+	responseModel.Code = model.PublicFail
+	query := r.URL.Query()
+	cid := utils.StringConstraint(query.Get("cid"), 0, math.MaxInt64, math.MaxInt64)
+	page := utils.StringConstraint(query.Get("page"), 1, math.MaxInt64, 1)
+	size := utils.StringConstraint(query.Get("size"), 20, 50, 20)
+	offset := (page - 1) * size
+	sql := "SELECT RID, CID,`INDEX`, s.UID, USERNAME, LANGUAGE, STATUS, RUN_TIME, RUN_MEMORY, SUBMIT_TIME FROM submit as s, user as u WHERE CID = ? AND s.UID = u.UID ORDER BY RID DESC LIMIT ?, ?"
+	if err := mysql.DBConn.Select(&responseModel.SubmitStatus.ItemList, sql, cid, offset, size); err != nil {
 		return
 	}
-	responseModel.ItemList = submitStatus
-	responseModel.Size = page.Size
-
-	stream, err := json.Marshal(responseModel)
-	if err != nil {
+	if err := mysql.DBConn.Get(&responseModel.SubmitStatus.Total, "SELECT COUNT(RID) FROM submit WHERE CID = ?", cid); err != nil {
 		return
 	}
-	_, _ = w.Write(stream)
+	responseModel.SubmitStatus.Size = size
+	responseModel.Code = model.Success
 }
 
 func init() {

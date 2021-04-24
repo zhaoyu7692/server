@@ -3,43 +3,66 @@ package controller
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"main/model"
+	"main/mysql"
 	"main/service"
-	"math/rand"
 	"net/http"
 )
 
-type fetchSubmitController struct {
-
+type judgerRequestModel struct {
+	Status       []model.Submit `json:"status"`
+	JudgingCount int64          `json:"judging_count"`
 }
 
-func (c *fetchSubmitController) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if r.Method == "POST" {
+type judgerResponseModel struct {
+	Problems []model.JudgeSubmitModel `json:"problems"`
+}
+
+type JudgerController struct {
+}
+
+func (c *JudgerController) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("POST")
+	if r.Method != "POST" {
 		return
 	}
-	submit := service.FetchSubmit()
-	bf := bytes.NewBuffer([]byte{})
-	js := json.NewEncoder(bf)
-	js.SetEscapeHTML(false)
-	_ = js.Encode(submit)
-	_, _ = w.Write(bf.Bytes())
-}
-type XXXController struct {
-
-}
-
-func (c *XXXController) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if r.Method == "POST" {
+	response := judgerResponseModel{}
+	defer func() {
+		bf := bytes.NewBuffer([]byte{})
+		js := json.NewEncoder(bf)
+		js.SetEscapeHTML(false)
+		if err := js.Encode(response); err != nil {
+			return
+		}
+		_, _ = w.Write(bf.Bytes())
+	}()
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
 		return
 	}
-	submit := &model.Submit{Pid: rand.Int63()}
-	service.StashSubmit(submit)
+	fmt.Println(string(body))
+	request := judgerRequestModel{}
+	if err := json.Unmarshal(body, &request); err != nil {
+		return
+	}
+	for i := 0; i < len(request.Status); i++ {
+		status := request.Status[i]
+		sql := "UPDATE submit SET STATUS = ?, CURRENT_CASE = ?, RUN_TIME = ? ,RUN_MEMORY = ?, COMPILATION_MESSAGE = ? WHERE RID = ?"
+		_, _ = mysql.DBConn.Exec(sql, status.Status, status.CurrentCase, status.TimeCost, status.MemoryCost, status.CompilationMessage, status.Rid)
+
+		service.UpdateRank(status.Rid)
+	}
+	for ; request.JudgingCount < 6; request.JudgingCount++ {
+		var submit *model.JudgeSubmitModel
+		if submit = service.FetchSubmit(); submit == nil {
+			break
+		}
+		response.Problems = append(response.Problems, *submit)
+	}
 }
+
 func init() {
-	RegisterController("/api/core/fetchSubmit/", new(fetchSubmitController))
-	RegisterController("/api/core/stashSubmit/", new(XXXController))
+	RegisterController("/api/core/j2s/", new(JudgerController))
 }
-
-
-
-

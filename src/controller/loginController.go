@@ -3,20 +3,61 @@ package controller
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"main/model"
+	"main/service"
 	"net/http"
 )
 
+type loginResponseModel struct {
+	User *model.User `json:"user,omitempty"`
+	model.ResponseBaseModel
+}
+
 type LoginController struct {
-	//Controller
 }
 
 func (c *LoginController) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	user := model.User{}
-	query := r.URL.Query()
-	fmt.Print(query)
-	msg, _ := json.Marshal(user)
-	_, _ = w.Write(msg)
+	if r.Method != "POST" {
+		return
+	}
+	var response loginResponseModel
+	// 返回
+	defer func() {
+		if stream, err := json.Marshal(response); err == nil {
+			_, _ = w.Write(stream)
+		}
+	}()
+	response.Code = model.PublicFail
+
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return
+	}
+	var user *model.User
+	if err := json.Unmarshal(body, &user); err != nil {
+		return
+	}
+	user, status := service.Login(user.Username, user.Password)
+	if status == service.LoginSuccess {
+		response.Code = model.Success
+		response.User = user
+	} else {
+		switch status {
+		case service.LoginFail:
+			{
+				response.Message = "登录失败，请稍后重试！"
+			}
+		case service.LoginUnRegister:
+			{
+				response.Message = "用户尚未注册，请先完成注册！"
+			}
+		case service.LoginWrongPassword:
+			{
+				response.Message = "用户名或密码错误，请确认后重试！"
+			}
+		}
+	}
 }
 
 func init() {
