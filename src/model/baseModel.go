@@ -39,17 +39,17 @@ type ResponseBaseModel struct {
 type JudgeStatus int
 
 const (
-	JudgeStatusSystemError JudgeStatus = -1
-	JudgeStatusWaiting                 = iota
-	JudgeStatusCompiling
-	JudgeStatusCompilationError
-	JudgeStatusCompilationTimeLimitExceeded
-	JudgeStatusRunning
-	JudgeStatusTimeLimitExceeded
-	JudgeStatusMemoryLimitExceeded
-	JudgeStatusOutputLimitExceeded
-	JudgeStatusRuntimeError
-	JudgeStatusPresentationError
-	JudgeStatusWrongAnswer
-	JudgeStatusAccept
+	JudgeStatusSystemError                  JudgeStatus = -1
+	JudgeStatusWaiting                                  = 0
+	JudgeStatusCompiling                                = 1
+	JudgeStatusCompilationError                         = 2
+	JudgeStatusCompilationTimeLimitExceeded             = 3
+	JudgeStatusRunning                                  = 4
+	JudgeStatusTimeLimitExceeded                        = 5
+	JudgeStatusMemoryLimitExceeded                      = 6
+	JudgeStatusOutputLimitExceeded                      = 7
+	JudgeStatusRuntimeError                             = 8
+	JudgeStatusPresentationError                        = 9
+	JudgeStatusWrongAnswer                              = 10
+	JudgeStatusAccept                                   = 11
 )

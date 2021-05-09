@@ -1,5 +1,5 @@
 # Default ignored files
-.idea
+#.idea
 openjudge-server.conf
 
 # Datasource local storage ignored files

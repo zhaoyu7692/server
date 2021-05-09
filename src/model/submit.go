@@ -6,17 +6,17 @@ import (
 )
 
 type Submit struct {
-	Rid                int64      `json:"rid" db:"RID"`
-	Cid                int64      `json:"cid" db:"CID"`
-	Index              int64      `json:"index" db:"INDEX"`
-	Code               string     `json:"code" db:"CODE"`
-	Status             int64      `json:"status" db:"STATUS"`
-	Language           int64      `json:"language" db:"LANGUAGE"`
-	TimeCost           *int64     `json:"time_cost" db:"RUN_TIME"`
-	CurrentCase        int64      `json:"current_case" db:"CURRENT_CASE"`
-	MemoryCost         *int64     `json:"memory_cost" db:"RUN_MEMORY"`
-	CompilationMessage *string    `json:"compilation_message" db:"COMPILATION_MESSAGE"`
-	SubmitTime         *time.Time `json:"submit_time,omitempty" db:"SUBMIT_TIME"`
+	Rid                int64       `json:"rid" db:"RID"`
+	Cid                int64       `json:"cid" db:"CID"`
+	Index              int64       `json:"index" db:"INDEX"`
+	Code               string      `json:"code" db:"CODE"`
+	Status             JudgeStatus `json:"status" db:"STATUS"`
+	Language           int64       `json:"language" db:"LANGUAGE"`
+	TimeCost           *int64      `json:"time_cost" db:"RUN_TIME"`
+	CurrentCase        int64       `json:"current_case" db:"CURRENT_CASE"`
+	MemoryCost         *int64      `json:"memory_cost" db:"RUN_MEMORY"`
+	CompilationMessage *string     `json:"compilation_message" db:"COMPILATION_MESSAGE"`
+	SubmitTime         *time.Time  `json:"submit_time,omitempty" db:"SUBMIT_TIME"`
 	User
 	//Timestamp
 }

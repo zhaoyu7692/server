@@ -60,19 +60,21 @@ func (c *SubmitController) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var contest model.Contest
-	if err := mysql.DBConn.Get(&contest, "SELECT BEGIN_TIME, DURATION FROM contest WHERE CID = ?", submit.Cid); err != nil {
-		return
-	}
+	// 比赛时间校验
 	now := time.Now()
-	duration, err := time.ParseDuration(strconv.FormatInt(contest.Duration, 10) + "s")
-	if err != nil {
-		return
+	if submit.Cid > 0 {
+		if err := mysql.DBConn.Get(&contest, "SELECT BEGIN_TIME, DURATION FROM contest WHERE CID = ?", submit.Cid); err != nil {
+			return
+		}
+		duration, err := time.ParseDuration(strconv.FormatInt(contest.Duration, 10) + "s")
+		if err != nil {
+			return
+		}
+		if now.Before(*contest.BeginTime) || now.After(contest.BeginTime.Add(duration)) {
+			response.Message = "不在比赛时间内，无法提交"
+			return
+		}
 	}
-	if now.Before(*contest.BeginTime) || now.After(contest.BeginTime.Add(duration)) {
-		response.Message = "不在比赛时间内，无法提交"
-		return
-	}
-
 	var problem model.JudgeSubmitModel
 	sql := "SELECT p.PID, p.TIME_LIMIT, p.MEMORY_LIMIT FROM problem as p, contest_problem_mapping as cp WHERE CID = ? AND `INDEX` = ? AND p.PID = cp.PID"
 	if err := mysql.DBConn.Get(&problem, sql, submit.Cid, submit.Index); err != nil {
@@ -80,7 +82,7 @@ func (c *SubmitController) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	// 提交
 	sql = "INSERT INTO submit (CID, `INDEX`, UID, CODE, STATUS, LANGUAGE, SUBMIT_TIME) values (?,?,?,?,?,?,?)"
-	if result, err := mysql.DBConn.Exec(sql, submit.Cid, submit.Index, submit.Uid, submit.Code, 0, submit.Language); err == nil {
+	if result, err := mysql.DBConn.Exec(sql, submit.Cid, submit.Index, submit.Uid, submit.Code, 0, submit.Language, now); err == nil {
 		if rid, err := result.LastInsertId(); err == nil {
 			// 写入待测题库
 			problem.Rid = rid
