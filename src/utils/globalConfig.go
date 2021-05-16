@@ -22,9 +22,14 @@ type MysqlConfig struct {
 	DBName   string
 }
 
+type Path struct {
+	Data string
+}
+
 type Config struct {
 	Mysql     MysqlConfig
 	OpenJudge OpenJudge
+	Path      Path
 }
 
 var GlobalConfig *Config

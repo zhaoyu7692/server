@@ -49,8 +49,8 @@ func (c *JudgerController) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	for i := 0; i < len(request.Status); i++ {
 		status := request.Status[i]
-		sql := "UPDATE submit SET STATUS = ?, CURRENT_CASE = ?, RUN_TIME = ? ,RUN_MEMORY = ?, COMPILATION_MESSAGE = ? WHERE RID = ?"
-		_, _ = mysql.DBConn.Exec(sql, status.Status, status.CurrentCase, status.TimeCost, status.MemoryCost, status.CompilationMessage, status.Rid)
+		sql := "UPDATE submit SET STATUS = ?, RUN_TIME = ? ,RUN_MEMORY = ?, COMPILATION_MESSAGE = ? WHERE RID = ?"
+		_, _ = mysql.DBConn.Exec(sql, status.Status, status.TimeCost, status.MemoryCost, status.CompilationMessage, status.Rid)
 		service.UpdateRank(status.Rid)
 	}
 	for ; request.JudgingCount < 6; request.JudgingCount++ {
