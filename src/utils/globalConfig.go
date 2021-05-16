@@ -24,6 +24,7 @@ type MysqlConfig struct {
 
 type Path struct {
 	Data string
+	Tmp  string
 }
 
 type Config struct {

@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"main/mysql"
 	"main/utils"
 	"math"
 	"net/http"
-	"regexp"
 )
 
 type syncTestCaseRequestModel struct {
@@ -38,36 +38,34 @@ func (c *CheckTestCaseController) ServeHTTP(w http.ResponseWriter, r *http.Reque
 		_ = json.Unmarshal(body, &requestModel)
 	}
 
-	testCases, err := ioutil.ReadDir(fmt.Sprintf("%s%d", utils.GlobalConfig.Path.Data, requestModel.Pid))
-	if err == nil {
-		files := make(map[string]bool)
-		removeFiles := make(map[string]bool)
-		inputFileRegex := regexp.MustCompile("^.+\\.in$")
-		outputFileRegex := regexp.MustCompile("^.+\\.out$")
-		for _, file := range testCases {
-			if inputFileRegex.MatchString(file.Name()) || outputFileRegex.MatchString(file.Name()) {
-				files[file.Name()] = true
-			}
-		}
+	var filenames []string
+	if err := mysql.DBConn.Select(&filenames, "SELECT FILENAME FROM testcase_mapping WHERE PID = ?", requestModel.Pid); err != nil {
+		return
+	}
 
-		// filename that will be removed
-		for _, filename := range requestModel.Filenames {
-			removeFiles[filename] = true
-		}
-		for filename := range files {
-			delete(removeFiles, filename)
-		}
-		for filename := range removeFiles {
-			responseModel.RemoveFilenames = append(responseModel.RemoveFilenames, filename)
-		}
+	filenameMap := make(map[string]bool)
+	for _, filename := range filenames {
+		filenameMap[filename] = true
+	}
 
-		// filename that need to be synced
-		for _, filename := range requestModel.Filenames {
-			delete(files, filename)
-		}
-		for fileName := range files {
-			responseModel.Filenames = append(responseModel.Filenames, fileName)
-		}
+	// filename that will be removed
+	removeFiles := make(map[string]bool)
+	for _, filename := range requestModel.Filenames {
+		removeFiles[filename] = true
+	}
+	for filename := range filenameMap {
+		delete(removeFiles, filename)
+	}
+	for filename := range removeFiles {
+		responseModel.RemoveFilenames = append(responseModel.RemoveFilenames, filename)
+	}
+
+	// filename that need to be synced
+	for _, filename := range requestModel.Filenames {
+		delete(filenameMap, filename)
+	}
+	for fileName := range filenameMap {
+		responseModel.Filenames = append(responseModel.Filenames, fileName)
 	}
 }
 

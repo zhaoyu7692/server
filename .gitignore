@@ -1,7 +1,9 @@
 # Default ignored files
 #.idea
 openjudge-server.conf
-
+data/
+check[8].xml
+image[1].jpg
 # Datasource local storage ignored files
 
 # Editor-based HTTP Client requests

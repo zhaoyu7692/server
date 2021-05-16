@@ -53,3 +53,10 @@ const (
 	JudgeStatusWrongAnswer                              = 10
 	JudgeStatusAccept                                   = 11
 )
+
+type ResourceMappingModel struct {
+	//Pid      int64  `json:"pid" db:"PID"`
+	Filename string `json:"filename" db:"FILENAME"`
+	SHAKey   string `json:"sha_key" db:"SHA_KEY"`
+	Path     string `json:"path" db:"PATH"`
+}
