@@ -9,6 +9,12 @@ import (
 	"net/http"
 )
 
+func init() {
+	RegisterHandler("/contest/", contest)
+	RegisterHandler("/contests/", contests)
+
+}
+
 type ContestResponseModel struct {
 	Problems []struct {
 		model.Problem
@@ -17,10 +23,7 @@ type ContestResponseModel struct {
 	model.ResponseBaseModel
 }
 
-type ContestController struct {
-}
-
-func (c *ContestController) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func contest(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
 		return
 	}
@@ -40,6 +43,34 @@ func (c *ContestController) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	response.Code = model.Success
 }
 
-func init() {
-	RegisterController("/contest/", new(ContestController))
+type contestsResponseModel struct {
+	Contests struct {
+		ItemList []model.Contest `json:"item_list"`
+		model.ResponsePaginationModel
+	} `json:"contests"`
+	model.ResponseBaseModel
+}
+
+func contests(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
+		return
+	}
+	response := contestsResponseModel{}
+	defer func() {
+		if stream, err := json.Marshal(response); err == nil {
+			_, _ = w.Write(stream)
+		}
+	}()
+	query := r.URL.Query()
+	page := utils.StringConstraint(query.Get("page"), 0, math.MaxInt64, 20)
+	size := utils.StringConstraint(query.Get("size"), 20, 20, 20)
+	offset := utils.Max((page-1)*size, 0)
+	if err := mysql.DBConn.Select(&response.Contests.ItemList, "SELECT CID, TITLE, BEGIN_TIME, DURATION, REGISTER_COUNT FROM contest ORDER BY CID DESC LIMIT ?, ?", offset, size); err != nil {
+		return
+	}
+	if err := mysql.DBConn.Get(&response.Contests.Total, "SELECT  COUNT(*) FROM contest"); err != nil {
+		return
+	}
+	response.Contests.Size = size
+	response.Code = model.Success
 }
