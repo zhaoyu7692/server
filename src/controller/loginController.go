@@ -48,10 +48,6 @@ func (c *LoginController) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			{
 				response.Message = "登录失败，请稍后重试！"
 			}
-		case service.LoginUnRegister:
-			{
-				response.Message = "用户尚未注册，请先完成注册！"
-			}
 		case service.LoginWrongPassword:
 			{
 				response.Message = "用户名或密码错误，请确认后重试！"

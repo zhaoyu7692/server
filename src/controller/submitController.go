@@ -41,9 +41,9 @@ func (c *SubmitController) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	// 鉴权
 	authStatus := service.AuthLogin(submit.Uid, submit.Token)
-	if authStatus != service.Authority {
-		return
-	}
+	//if authStatus != service.Authority {
+	//	return
+	//}
 	switch authStatus {
 	case service.UnAuthority:
 		{
@@ -54,7 +54,7 @@ func (c *SubmitController) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			response.Message = "会话过期，请登陆后提交题目"
 		}
 	}
-	if authStatus != service.Authority {
+	if authStatus != service.Authority && authStatus != service.AuthorityAdmin {
 		response.Code = model.JumpLogin
 		return
 	}

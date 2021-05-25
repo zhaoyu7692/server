@@ -3,13 +3,13 @@ package controller
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/gomodule/redigo/redis"
 	"main/model"
 	"main/mysql"
 	"main/redispool"
 	"main/utils"
 	"math"
 	"net/http"
+	"sort"
 	"strconv"
 	"time"
 )
@@ -47,10 +47,11 @@ func (c *ContestRankController) ServeHTTP(w http.ResponseWriter, r *http.Request
 	if cid == math.MaxInt64 {
 		return
 	}
-	if reply, err := redis.Bytes(redispool.Get().Do("GET", fmt.Sprintf("contest_rank_key_cid_%d", cid))); err == nil {
-		_, _ = w.Write(reply)
-		return
-	}
+	// TODO: redis
+	//if reply, err := redis.Bytes(redispool.Get().Do("GET", fmt.Sprintf("contest_rank_key_cid_%d", cid))); err == nil {
+	//	_, _ = w.Write(reply)
+	//	return
+	//}
 	defer func() {
 		if stream, err := json.Marshal(response); err == nil {
 			_, _ = redispool.Get().Do("SET", fmt.Sprintf("contest_rank_key_cid_%d", cid), stream)
@@ -89,11 +90,23 @@ func (c *ContestRankController) ServeHTTP(w http.ResponseWriter, r *http.Request
 			}
 			tryCount := int64(0)
 			for k := 0; k < len(submits); k++ {
-				submitTime := submits[i].SubmitTime
+				submitTime := submits[k].SubmitTime
 				if submitTime.Before(*response.Contest.BeginTime) || submitTime.After(response.Contest.BeginTime.Add(duration)) {
 					continue
 				}
-				tryCount++
+				switch submits[k].Status {
+				case model.JudgeStatusCompilationError,
+					model.JudgeStatusCompilationTimeLimitExceeded,
+					model.JudgeStatusTimeLimitExceeded,
+					model.JudgeStatusMemoryLimitExceeded,
+					model.JudgeStatusOutputLimitExceeded,
+					model.JudgeStatusRuntimeError,
+					model.JudgeStatusPresentationError,
+					model.JudgeStatusWrongAnswer,
+					model.JudgeStatusAccept:
+					tryCount++
+				}
+
 				if submits[k].Status == model.JudgeStatusAccept {
 					problemRank.AcceptDuration = int64(math.Floor(submits[k].SubmitTime.Sub(*response.Contest.BeginTime).Minutes()))
 					break
@@ -102,12 +115,19 @@ func (c *ContestRankController) ServeHTTP(w http.ResponseWriter, r *http.Request
 			problemRank.TryCount = tryCount
 			if problemRank.AcceptDuration > 0 {
 				response.ContestRank[i].Penalty += problemRank.AcceptDuration + (tryCount-1)*20
-				response.ContestRank[i].AcceptCount ++
+				response.ContestRank[i].AcceptCount++
 			}
 			response.ContestRank[i].Problem = append(response.ContestRank[i].Problem, problemRank)
 		}
-		//TODO: sort
 	}
+	sort.Slice(response.ContestRank, func(i, j int) bool {
+		if response.ContestRank[i].AcceptCount < response.ContestRank[j].AcceptCount {
+			return false
+		} else if response.ContestRank[i].AcceptCount == response.ContestRank[j].AcceptCount && response.ContestRank[i].Penalty >= response.ContestRank[j].Penalty {
+			return false
+		}
+		return true
+	})
 	response.Code = model.Success
 }
 

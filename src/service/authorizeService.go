@@ -14,29 +14,8 @@ const (
 	Authority AuthStatus = iota
 	SessionOverdue
 	UnAuthority
+	AuthorityAdmin
 )
-
-//type AuthorizeServiceUser struct {
-//	model.User
-//	//model.Timestamp
-//}
-
-func AuthLogin(Uid int64, token string) AuthStatus {
-	var user model.User
-	if err := mysql.DBConn.Get(&user, "SELECT TOKEN, LAST_MODIFIED FROM user WHERE UID = ?", Uid); err != nil {
-		return UnAuthority
-	}
-	if time.Now().After(user.LastModified.Add(6 * time.Hour)) {
-		return SessionOverdue
-	}
-	if token != user.Token {
-		return UnAuthority
-	}
-	if _, err := mysql.DBConn.Exec("UPDATE user SET LAST_MODIFIED = ? WHERE UID = ?", time.Now(), Uid); err != nil {
-		return UnAuthority
-	}
-	return Authority
-}
 
 type LoginStatus int
 
@@ -47,22 +26,6 @@ const (
 	LoginUnRegister
 )
 
-func Login(username string, password string) (*model.User, LoginStatus) {
-	var user model.User
-	if err := mysql.DBConn.Get(&user, "SELECT UID, USERNAME, PASSWORD, TOKEN FROM user WHERE USERNAME = ?", username); err != nil {
-		return nil, LoginUnRegister
-	}
-	if password != user.Password {
-		return nil, LoginWrongPassword
-	}
-	user.Token = uuid.NewV4().String()
-	if _, err := mysql.DBConn.Exec("UPDATE user SET TOKEN = ?, LAST_MODIFIED = ? WHERE UID = ?", user.Token, time.Now(), user.Uid); err != nil {
-		return nil, LoginFail
-	}
-	user.Password = ""
-	return &user, LoginSuccess
-}
-
 type RegisterStatus int
 
 const (
@@ -70,6 +33,35 @@ const (
 	RegisterSuccess
 	RegisterRepetitiveUsername
 )
+
+func AuthLogin(Uid int64, token string) AuthStatus {
+	var user model.User
+	if err := mysql.DBConn.Get(&user, "SELECT USER_TYPE, LAST_AUTHORITY FROM user WHERE UID = ? AND TOKEN = ?", Uid, token); err != nil {
+		return UnAuthority
+	}
+	if time.Now().After(user.LastAuthority.Add(6 * time.Hour)) {
+		return SessionOverdue
+	}
+	if _, err := mysql.DBConn.Exec("UPDATE user SET LAST_AUTHORITY = ? WHERE UID = ?", time.Now(), Uid); err != nil {
+		return UnAuthority
+	}
+	if user.UserType == model.UserTypeAdmin {
+		return AuthorityAdmin
+	}
+	return Authority
+}
+
+func Login(username string, password string) (*model.User, LoginStatus) {
+	var user model.User
+	if err := mysql.DBConn.Get(&user, "SELECT UID, USERNAME, USER_TYPE FROM user WHERE USERNAME = ? AND PASSWORD = ?", username, password); err != nil {
+		return nil, LoginWrongPassword
+	}
+	user.Token = uuid.NewV4().String()
+	if _, err := mysql.DBConn.Exec("UPDATE user SET TOKEN = ?, LAST_AUTHORITY = ? WHERE UID = ?", user.Token, time.Now(), user.Uid); err != nil {
+		return nil, LoginFail
+	}
+	return &user, LoginSuccess
+}
 
 var RegisterMutex sync.Mutex
 

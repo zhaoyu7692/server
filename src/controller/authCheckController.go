@@ -28,6 +28,7 @@ func (c *AuthCheckController) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 	response.Code = model.JumpLogin
 	user := &model.User{}
 	body, err := ioutil.ReadAll(r.Body)
+
 	if err != nil {
 		return
 	}

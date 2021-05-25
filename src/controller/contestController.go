@@ -10,7 +10,10 @@ import (
 )
 
 type ContestResponseModel struct {
-	Problems []model.Problem `json:"problems"`
+	Problems []struct {
+		model.Problem
+		Index int64 `json:"index" db:"INDEX"`
+	} `json:"problems"`
 	model.ResponseBaseModel
 }
 
@@ -30,7 +33,7 @@ func (c *ContestController) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	response.Code = model.PublicFail
 	query := r.URL.Query()
 	cid := utils.StringConstraint(query.Get("cid"), 1, math.MaxInt64, math.MaxInt64)
-	sql := "SELECT p.PID, TITLE, DIFF, ACCEPT, TOTAL FROM contest_problem_mapping as cp, problem as p WHERE CID = ? AND cp.PID = p.PID ORDER BY cp.`INDEX`"
+	sql := "SELECT `INDEX`, TITLE, DIFF, ACCEPT, TOTAL FROM contest_problem_mapping as cp, problem as p WHERE CID = ? AND cp.PID = p.PID ORDER BY `INDEX`"
 	if err := mysql.DBConn.Select(&response.Problems, sql, cid); err != nil {
 		return
 	}
