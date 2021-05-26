@@ -7,6 +7,7 @@ import (
 	"main/dao"
 	"main/model"
 	"main/mysql"
+	"main/service"
 	"main/utils"
 	"math"
 	"net/http"
@@ -16,43 +17,44 @@ import (
 )
 
 func init() {
-	RegisterHandler("/getProblem/", getProblem)
+	//RegisterHandler("/getProblem/", getProblem)
 	RegisterHandler("/createProblem/", createProblem)
-	RegisterHandler("/updateProblem/", updateProblem)
+	//RegisterHandler("/updateProblem/", updateProblem)
 	RegisterHandler("/deleteProblem/", deleteProblem)
 	RegisterHandler("/getContest/", getContest)
 	RegisterHandler("/createContest/", createContest)
 	RegisterHandler("/updateContest/", updateContest)
-	RegisterHandler("/createProblem/", deleteContest)
+	RegisterHandler("/deleteContest/", deleteContest)
 }
 
-type getProblemResponseModel struct {
-	Problem   *dao.ProblemTableModel           `json:"problem"`
-	Samples   *[]dao.SampleTableModel          `json:"samples"`
-	Testcases *[]dao.TestcaseMappingTableModel `json:"testcases"`
-	model.ResponseBaseModel
-}
+//type getProblemResponseModel struct {
+//	Problem   *dao.ProblemTableModel           `json:"problem"`
+//	Samples   *[]dao.SampleTableModel          `json:"samples"`
+//	Testcases *[]dao.TestcaseMappingTableModel `json:"testcases"`
+//	model.ResponseBaseModel
+//}
 
-func getProblem(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		return
-	}
-	responseModel := getProblemResponseModel{}
-	responseModel.Code = model.PublicFail
-	defer func() {
-		if stream, err := json.Marshal(responseModel); err == nil {
-			_, _ = w.Write(stream)
-		}
-	}()
-	query := r.URL.Query()
-	pid := utils.StringConstraint(query.Get("pid"), 1, math.MaxInt64, math.MaxInt64)
-	if pid == math.MaxInt64 {
-		return
-	}
-	responseModel.Problem = dao.GetProblemWithPid(pid)
-	responseModel.Samples = dao.GetSamplesWithPid(pid)
-	responseModel.Testcases = dao.GetTestCasesWithPid(pid)
-}
+//func getProblem(w http.ResponseWriter, r *http.Request) {
+//	if r.Method != http.MethodGet {
+//		return
+//	}
+//	responseModel := getProblemResponseModel{}
+//	responseModel.Code = model.PublicFail
+//	defer func() {
+//		if stream, err := json.Marshal(responseModel); err == nil {
+//			_, _ = w.Write(stream)
+//		}
+//	}()
+//	query := r.URL.Query()
+//	pid := utils.StringConstraint(query.Get("pid"), 1, math.MaxInt64, math.MaxInt64)
+//	if pid == math.MaxInt64 {
+//		return
+//	}
+//	responseModel.Problem = dao.GetProblemWithPid(pid)
+//	responseModel.Samples = dao.GetSamplesWithPid(pid)
+//	responseModel.Testcases = dao.GetTestCasesWithPid(pid)
+//	responseModel.Code = model.Success
+//}
 
 type createProblemRequestModel struct {
 	Title        string          `json:"title"`
@@ -65,6 +67,7 @@ type createProblemRequestModel struct {
 	MemoryLimit  int64           `json:"memory_limit"`
 	FilenameList []string        `json:"filename_list"`
 	Samples      []model.Example `json:"samples"`
+	User         model.User      `json:"user"`
 }
 
 type createProblemResponseModel struct {
@@ -94,6 +97,12 @@ func createProblem(w http.ResponseWriter, r *http.Request) {
 	if err = json.Unmarshal(body, &requestModel); err != nil {
 		return
 	}
+	if service.AuthCheck(requestModel.User.Uid, requestModel.User.Token) != service.AuthorityAdmin {
+		responseModel.Message = "没有权限进行该操作"
+		return
+	}
+	problemLock.Lock()
+	defer problemLock.Unlock()
 	tx, err := mysql.DBConn.Begin()
 	if err != nil {
 		return
@@ -104,15 +113,13 @@ func createProblem(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 	// create problem
-	problemLock.Lock()
-	defer problemLock.Unlock()
 	var pid int64
 	if err := mysql.DBConn.Get(&pid, "SELECT MAX(PID) FROM problem"); err != nil {
 		return
 	}
 	pid++
-	sql := "INSERT INTO problem (TITLE, DESCRIPTION, DIFF, INPUT, OUTPUT, SOURCE, TIME_LIMIT, MEMORY_LIMIT) VALUES (?,?,?,?,?,?,?,?)"
-	if _, err = tx.Exec(sql, requestModel.Title, requestModel.Description, requestModel.Difficulty, requestModel.Input, requestModel.Output, requestModel.Source, requestModel.TimeLimit, requestModel.MemoryLimit); err != nil {
+	sql := "INSERT INTO problem (PID, TITLE, DESCRIPTION, DIFF, INPUT, OUTPUT, SOURCE, TIME_LIMIT, MEMORY_LIMIT) VALUES (?,?,?,?,?,?,?,?,?)"
+	if _, err = tx.Exec(sql, pid, requestModel.Title, requestModel.Description, requestModel.Difficulty, requestModel.Input, requestModel.Output, requestModel.Source, requestModel.TimeLimit, requestModel.MemoryLimit); err != nil {
 		return
 	}
 
@@ -164,12 +171,68 @@ func createProblem(w http.ResponseWriter, r *http.Request) {
 	responseModel.Code = model.Success
 }
 
-func updateProblem(w http.ResponseWriter, r *http.Request) {
+//func updateProblem(w http.ResponseWriter, r *http.Request) {
+//
+//}
 
+type deleteProblemRequestModel struct {
+	Pid  int64      `json:"pid"`
+	User model.User `json:"user"`
+}
+
+type deleteProblemResponseModel struct {
+	model.ResponseBaseModel
 }
 
 func deleteProblem(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		return
+	}
+	responseModel := deleteProblemResponseModel{}
+	responseModel.Code = model.PublicFail
+	defer func() {
+		if data, err := json.Marshal(responseModel); err == nil {
+			_, _ = w.Write(data)
+		}
+	}()
 
+	requestModel := deleteProblemRequestModel{}
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return
+	}
+	if err = json.Unmarshal(body, &requestModel); err != nil {
+		return
+	}
+	if service.AuthCheck(requestModel.User.Uid, requestModel.User.Token) != service.AuthorityAdmin {
+		responseModel.Message = "没有权限进行该操作"
+		return
+	}
+	problemLock.Lock()
+	defer problemLock.Unlock()
+	tx, err := mysql.DBConn.Begin()
+	if err != nil {
+		return
+	}
+	defer func() {
+		if responseModel.Code != model.Success {
+			_ = tx.Rollback()
+		}
+	}()
+	// delete problem
+	if _, err := tx.Exec("DELETE FROM problem WHERE PID = ?", requestModel.Pid); err != nil {
+		return
+	}
+	if _, err := tx.Exec("DELETE  FROM contest_problem_mapping WHERE PID = ?", requestModel.Pid); err != nil {
+		return
+	}
+	if _, err := tx.Exec("DELETE FROM testcase_mapping WHERE PID = ?", requestModel.Pid); err != nil {
+		return
+	}
+	if err = tx.Commit(); err != nil {
+		return
+	}
+	responseModel.Code = model.Success
 }
 
 type getContestResponseModel struct {
@@ -208,11 +271,14 @@ type createContestRequestModel struct {
 		Index int64 `json:"index"`
 		Pid   int64 `json:"pid"`
 	} `json:"problems"`
+	User model.User `json:"user"`
 }
 
 type createContestResponseModel struct {
 	model.ResponseBaseModel
 }
+
+var contestLock sync.Mutex
 
 func createContest(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
@@ -233,8 +299,12 @@ func createContest(w http.ResponseWriter, r *http.Request) {
 	if err := json.Unmarshal(body, &requestModel); err != nil {
 		return
 	}
-
+	if service.AuthCheck(requestModel.User.Uid, requestModel.User.Token) != service.AuthorityAdmin {
+		return
+	}
 	fmt.Println(requestModel)
+	contestLock.Lock()
+	defer contestLock.Unlock()
 	tx, err := mysql.DBConn.Begin()
 	if err != nil {
 		return
@@ -264,10 +334,128 @@ func createContest(w http.ResponseWriter, r *http.Request) {
 	response.Code = model.Success
 }
 
-func updateContest(w http.ResponseWriter, r *http.Request) {
+type updateContestRequestModel struct {
+	Cid       int64     `json:"cid"`
+	Title     string    `json:"title"`
+	StartTime time.Time `json:"start_time"`
+	Duration  int64     `json:"duration"`
+	EndTime   time.Time `json:"end_time"`
+	Problems  []struct {
+		Index int64 `json:"index"`
+		Pid   int64 `json:"pid"`
+	} `json:"problems"`
+	User model.User `json:"user"`
+}
 
+type updateContestResponseModel struct {
+	model.ResponseBaseModel
+}
+
+func updateContest(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		return
+	}
+	response := updateContestResponseModel{}
+	response.Code = model.PublicFail
+	defer func() {
+		if stream, err := json.Marshal(response); err == nil {
+			_, _ = w.Write(stream)
+		}
+	}()
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return
+	}
+	requestModel := updateContestRequestModel{}
+	if err := json.Unmarshal(body, &requestModel); err != nil {
+		return
+	}
+	if requestModel.Cid <= 0 || service.AuthCheck(requestModel.User.Uid, requestModel.User.Token) != service.AuthorityAdmin {
+		return
+	}
+	fmt.Println(requestModel)
+	contestLock.Lock()
+	defer contestLock.Unlock()
+	tx, err := mysql.DBConn.Begin()
+	if err != nil {
+		return
+	}
+	defer func() {
+		if response.Code != model.Success {
+			_ = tx.Rollback()
+		}
+	}()
+	_, err = tx.Exec("UPDATE contest SET TITLE = ?, BEGIN_TIME = ?, DURATION = ? WHERE CID = ?", requestModel.Title, requestModel.StartTime, requestModel.Duration, requestModel.Cid)
+	if err != nil {
+		return
+	}
+	if _, err = tx.Exec("DELETE FROM contest_problem_mapping WHERE CID = ?", requestModel.Cid); err != nil {
+		return
+	}
+	for i := 0; i < len(requestModel.Problems); i++ {
+		problem := requestModel.Problems[i]
+		if _, err = tx.Exec("INSERT INTO contest_problem_mapping (CID, `INDEX`, PID) VALUES (?,?,?)", requestModel.Cid, problem.Index, problem.Pid); err != nil {
+			return
+		}
+	}
+	if err := tx.Commit(); err != nil {
+		return
+	}
+	response.Code = model.Success
+}
+
+type deleteContestRequestModel struct {
+	Cid  int64      `json:"cid"`
+	User model.User `json:"user"`
+}
+
+type deleteContestResponseModel struct {
+	model.ResponseBaseModel
 }
 
 func deleteContest(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		return
+	}
+	response := deleteContestResponseModel{}
+	response.Code = model.PublicFail
+	defer func() {
+		if stream, err := json.Marshal(response); err == nil {
+			_, _ = w.Write(stream)
+		}
+	}()
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return
+	}
+	requestModel := deleteContestRequestModel{}
+	if err := json.Unmarshal(body, &requestModel); err != nil {
+		return
+	}
+	if requestModel.Cid <= 0 || service.AuthCheck(requestModel.User.Uid, requestModel.User.Token) != service.AuthorityAdmin {
+		return
+	}
+	contestLock.Lock()
+	defer contestLock.Unlock()
+	fmt.Println(requestModel)
+	tx, err := mysql.DBConn.Begin()
+	if err != nil {
+		return
+	}
+	defer func() {
+		if response.Code != model.Success {
+			_ = tx.Rollback()
+		}
+	}()
+	if _, err = tx.Exec("DELETE FROM contest WHERE CID = ?", requestModel.Cid); err != nil {
+		return
+	}
+	if _, err = tx.Exec("DELETE FROM contest_problem_mapping WHERE CID = ?", requestModel.Cid); err != nil {
+		return
+	}
 
+	if err := tx.Commit(); err != nil {
+		return
+	}
+	response.Code = model.Success
 }

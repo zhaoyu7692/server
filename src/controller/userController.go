@@ -42,7 +42,7 @@ func authCheck(w http.ResponseWriter, r *http.Request) {
 	if err := json.Unmarshal(body, user); err != nil {
 		return
 	}
-	code := service.AuthLogin(user.Uid, user.Token)
+	code := service.AuthCheck(user.Uid, user.Token)
 	if code == service.Authority || code == service.AuthorityAdmin {
 		response.Code = model.Success
 	}

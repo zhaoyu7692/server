@@ -12,7 +12,7 @@ type Problem struct {
 	Pid               int64     `json:"pid" db:"PID"`
 	Title             string    `json:"title,omitempty" db:"TITLE"`
 	Description       string    `json:"description,omitempty" db:"DESCRIPTION"`
-	Difficulty        int64     `json:"difficulty,omitempty" db:"DIFF"`
+	Difficulty        int64     `json:"difficulty" db:"DIFF"`
 	InputDescription  string    `json:"input_description,omitempty" db:"INPUT"`
 	OutputDescription string    `json:"output_description,omitempty" db:"OUTPUT"`
 	TimeLimit         int64     `json:"time_limit,omitempty" db:"TIME_LIMIT"`

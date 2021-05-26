@@ -46,7 +46,6 @@ type ProblemTableModel struct {
 	Output      string `json:"output" db:"OUTPUT"`
 	TimeLimit   int64  `json:"time_limit" db:"TIME_LIMIT"`
 	MemoryLimit int64  `json:"memory_limit" db:"MEMORY_LIMIT"`
-	CaseCount   int64  `json:"case_count" db:"CASE_COUNT"`
 	Source      string `json:"source" db:"SOURCE"`
 }
 

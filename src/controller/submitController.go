@@ -40,7 +40,7 @@ func (c *SubmitController) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 鉴权
-	authStatus := service.AuthLogin(submit.Uid, submit.Token)
+	authStatus := service.AuthCheck(submit.Uid, submit.Token)
 	//if authStatus != service.Authority {
 	//	return
 	//}

@@ -4589,313 +4589,304 @@ SELECT|sys.sys_config
 INDEX</ColNames>
       <Primary>1</Primary>
     </key>
-    <foreign-key id="1121" parent="363" name="contest_problem_mapping_problem_PID_fk">
-      <ColNames>PID</ColNames>
-      <RefTableName>problem</RefTableName>
-      <RefColNames>PID</RefColNames>
-    </foreign-key>
-    <column id="1122" parent="364" name="PID">
+    <column id="1121" parent="364" name="PID">
       <Position>1</Position>
       <DataType>int|0s</DataType>
       <NotNull>1</NotNull>
     </column>
-    <column id="1123" parent="364" name="TITLE">
+    <column id="1122" parent="364" name="TITLE">
       <Position>2</Position>
       <DataType>text|0s</DataType>
     </column>
-    <column id="1124" parent="364" name="DESCRIPTION">
+    <column id="1123" parent="364" name="DESCRIPTION">
       <Position>3</Position>
       <DataType>text|0s</DataType>
     </column>
-    <column id="1125" parent="364" name="DIFF">
+    <column id="1124" parent="364" name="DIFF">
       <Position>4</Position>
       <DataType>int|0s</DataType>
     </column>
-    <column id="1126" parent="364" name="INPUT">
+    <column id="1125" parent="364" name="INPUT">
       <Position>5</Position>
       <DataType>text|0s</DataType>
     </column>
-    <column id="1127" parent="364" name="OUTPUT">
+    <column id="1126" parent="364" name="OUTPUT">
       <Position>6</Position>
       <DataType>text|0s</DataType>
     </column>
-    <column id="1128" parent="364" name="SOURCE">
+    <column id="1127" parent="364" name="SOURCE">
       <Position>7</Position>
       <DataType>varchar(20)|0s</DataType>
     </column>
-    <column id="1129" parent="364" name="TIME_LIMIT">
+    <column id="1128" parent="364" name="TIME_LIMIT">
       <Position>8</Position>
       <DataType>int|0s</DataType>
     </column>
-    <column id="1130" parent="364" name="MEMORY_LIMIT">
+    <column id="1129" parent="364" name="MEMORY_LIMIT">
       <Position>9</Position>
       <DataType>int|0s</DataType>
     </column>
-    <column id="1131" parent="364" name="CASE_COUNT">
+    <column id="1130" parent="364" name="GMT_CREATED">
       <Position>10</Position>
-      <DataType>int|0s</DataType>
+      <DataType>datetime|0s</DataType>
     </column>
-    <column id="1132" parent="364" name="GMT_CREATED">
+    <column id="1131" parent="364" name="GMT_MODIFIED">
       <Position>11</Position>
       <DataType>datetime|0s</DataType>
     </column>
-    <column id="1133" parent="364" name="GMT_MODIFIED">
-      <Position>12</Position>
-      <DataType>datetime|0s</DataType>
-    </column>
-    <key id="1134" parent="364" name="PRIMARY">
+    <key id="1132" parent="364" name="PRIMARY">
       <NameSurrogate>1</NameSurrogate>
       <ColNames>PID</ColNames>
       <Primary>1</Primary>
     </key>
-    <trigger id="1135" parent="364" name="problem_insert">
+    <trigger id="1133" parent="364" name="problem_insert">
       <SourceTextLength>68</SourceTextLength>
       <Definer>root@localhost</Definer>
       <Turn>before-row</Turn>
       <Events>I</Events>
     </trigger>
-    <trigger id="1136" parent="364" name="problem_update">
+    <trigger id="1134" parent="364" name="problem_update">
       <SourceTextLength>43</SourceTextLength>
       <Definer>root@localhost</Definer>
       <Turn>before-row</Turn>
       <Events>U</Events>
     </trigger>
-    <column id="1137" parent="365" name="FILENAME">
+    <column id="1135" parent="365" name="FILENAME">
       <Position>1</Position>
       <DataType>text|0s</DataType>
       <NotNull>1</NotNull>
     </column>
-    <column id="1138" parent="365" name="SHA_KEY">
+    <column id="1136" parent="365" name="SHA_KEY">
       <Position>2</Position>
       <DataType>varchar(64)|0s</DataType>
       <NotNull>1</NotNull>
     </column>
-    <column id="1139" parent="365" name="PATH">
+    <column id="1137" parent="365" name="PATH">
       <Position>3</Position>
       <DataType>text|0s</DataType>
     </column>
-    <key id="1140" parent="365" name="PRIMARY">
+    <key id="1138" parent="365" name="PRIMARY">
       <NameSurrogate>1</NameSurrogate>
       <ColNames>SHA_KEY</ColNames>
       <Primary>1</Primary>
     </key>
-    <column id="1141" parent="366" name="PID">
+    <column id="1139" parent="366" name="PID">
       <Position>1</Position>
       <DataType>int|0s</DataType>
       <NotNull>1</NotNull>
     </column>
-    <column id="1142" parent="366" name="SID">
+    <column id="1140" parent="366" name="SID">
       <Position>2</Position>
       <DataType>int|0s</DataType>
       <NotNull>1</NotNull>
     </column>
-    <column id="1143" parent="366" name="INPUT">
+    <column id="1141" parent="366" name="INPUT">
       <Position>3</Position>
       <DataType>text|0s</DataType>
       <NotNull>1</NotNull>
     </column>
-    <column id="1144" parent="366" name="OUTPUT">
+    <column id="1142" parent="366" name="OUTPUT">
       <Position>4</Position>
       <DataType>text|0s</DataType>
       <NotNull>1</NotNull>
     </column>
-    <column id="1145" parent="366" name="GMT_CREATED">
+    <column id="1143" parent="366" name="GMT_CREATED">
       <Position>5</Position>
       <DataType>datetime|0s</DataType>
     </column>
-    <column id="1146" parent="366" name="GMT_MODIFIED">
+    <column id="1144" parent="366" name="GMT_MODIFIED">
       <Position>6</Position>
       <DataType>datetime|0s</DataType>
     </column>
-    <key id="1147" parent="366" name="PRIMARY">
+    <key id="1145" parent="366" name="PRIMARY">
       <NameSurrogate>1</NameSurrogate>
       <ColNames>PID
 SID</ColNames>
       <Primary>1</Primary>
     </key>
-    <column id="1148" parent="367" name="RID">
+    <column id="1146" parent="367" name="RID">
       <Position>1</Position>
       <DataType>int|0s</DataType>
       <NotNull>1</NotNull>
       <SequenceIdentity>null</SequenceIdentity>
     </column>
-    <column id="1149" parent="367" name="CID">
+    <column id="1147" parent="367" name="CID">
       <Position>2</Position>
       <DataType>int|0s</DataType>
       <NotNull>1</NotNull>
     </column>
-    <column id="1150" parent="367" name="INDEX">
+    <column id="1148" parent="367" name="INDEX">
       <Position>3</Position>
       <DataType>int|0s</DataType>
       <NotNull>1</NotNull>
     </column>
-    <column id="1151" parent="367" name="UID">
+    <column id="1149" parent="367" name="UID">
       <Position>4</Position>
       <DataType>int|0s</DataType>
     </column>
-    <column id="1152" parent="367" name="CODE">
+    <column id="1150" parent="367" name="CODE">
       <Position>5</Position>
       <DataType>text|0s</DataType>
     </column>
-    <column id="1153" parent="367" name="STATUS">
+    <column id="1151" parent="367" name="STATUS">
       <Position>6</Position>
       <DataType>int|0s</DataType>
     </column>
-    <column id="1154" parent="367" name="LANGUAGE">
+    <column id="1152" parent="367" name="LANGUAGE">
       <Position>7</Position>
       <DataType>int|0s</DataType>
       <NotNull>1</NotNull>
       <DefaultExpression>0</DefaultExpression>
     </column>
-    <column id="1155" parent="367" name="RUN_TIME">
+    <column id="1153" parent="367" name="RUN_TIME">
       <Position>8</Position>
       <DataType>int|0s</DataType>
     </column>
-    <column id="1156" parent="367" name="RUN_MEMORY">
+    <column id="1154" parent="367" name="RUN_MEMORY">
       <Position>9</Position>
       <DataType>int|0s</DataType>
     </column>
-    <column id="1157" parent="367" name="CURRENT_CASE">
+    <column id="1155" parent="367" name="CURRENT_CASE">
       <Position>10</Position>
       <DataType>int|0s</DataType>
       <NotNull>1</NotNull>
       <DefaultExpression>0</DefaultExpression>
     </column>
-    <column id="1158" parent="367" name="COMPILATION_MESSAGE">
+    <column id="1156" parent="367" name="COMPILATION_MESSAGE">
       <Position>11</Position>
       <DataType>text|0s</DataType>
     </column>
-    <column id="1159" parent="367" name="SUBMIT_TIME">
+    <column id="1157" parent="367" name="SUBMIT_TIME">
       <Position>12</Position>
       <DataType>datetime|0s</DataType>
     </column>
-    <column id="1160" parent="367" name="GMT_CREATED">
+    <column id="1158" parent="367" name="GMT_CREATED">
       <Position>13</Position>
       <DataType>datetime|0s</DataType>
     </column>
-    <column id="1161" parent="367" name="GMT_MODIFIED">
+    <column id="1159" parent="367" name="GMT_MODIFIED">
       <Position>14</Position>
       <DataType>datetime|0s</DataType>
     </column>
-    <index id="1162" parent="367" name="PID">
+    <index id="1160" parent="367" name="PID">
       <ColNames>CID</ColNames>
       <Type>btree</Type>
     </index>
-    <index id="1163" parent="367" name="UID">
+    <index id="1161" parent="367" name="UID">
       <ColNames>UID</ColNames>
       <Type>btree</Type>
     </index>
-    <key id="1164" parent="367" name="PRIMARY">
+    <key id="1162" parent="367" name="PRIMARY">
       <NameSurrogate>1</NameSurrogate>
       <ColNames>RID</ColNames>
       <Primary>1</Primary>
     </key>
-    <foreign-key id="1165" parent="367" name="submit_ibfk_2">
+    <foreign-key id="1163" parent="367" name="submit_ibfk_2">
       <ColNames>UID</ColNames>
       <RefTableName>user</RefTableName>
       <RefColNames>UID</RefColNames>
     </foreign-key>
-    <trigger id="1166" parent="367" name="submit_insert">
+    <trigger id="1164" parent="367" name="submit_insert">
       <SourceTextLength>68</SourceTextLength>
       <Definer>root@localhost</Definer>
       <Turn>before-row</Turn>
       <Events>I</Events>
     </trigger>
-    <trigger id="1167" parent="367" name="submit_update">
+    <trigger id="1165" parent="367" name="submit_update">
       <SourceTextLength>43</SourceTextLength>
       <Definer>root@localhost</Definer>
       <Turn>before-row</Turn>
       <Events>U</Events>
     </trigger>
-    <column id="1168" parent="368" name="uid">
+    <column id="1166" parent="368" name="uid">
       <Position>1</Position>
       <DataType>int|0s</DataType>
     </column>
-    <column id="1169" parent="368" name="did">
+    <column id="1167" parent="368" name="did">
       <Position>2</Position>
       <DataType>int|0s</DataType>
     </column>
-    <column id="1170" parent="369" name="PID">
+    <column id="1168" parent="369" name="PID">
       <Position>1</Position>
       <DataType>int|0s</DataType>
       <NotNull>1</NotNull>
     </column>
-    <column id="1171" parent="369" name="FILENAME">
+    <column id="1169" parent="369" name="FILENAME">
       <Position>2</Position>
       <DataType>varchar(100)|0s</DataType>
       <NotNull>1</NotNull>
     </column>
-    <column id="1172" parent="369" name="KEY">
+    <column id="1170" parent="369" name="KEY">
       <Position>3</Position>
       <DataType>varchar(64)|0s</DataType>
     </column>
-    <column id="1173" parent="369" name="PATH">
+    <column id="1171" parent="369" name="PATH">
       <Position>4</Position>
       <DataType>text|0s</DataType>
     </column>
-    <key id="1174" parent="369" name="PRIMARY">
+    <key id="1172" parent="369" name="PRIMARY">
       <NameSurrogate>1</NameSurrogate>
       <ColNames>PID
 FILENAME</ColNames>
       <Primary>1</Primary>
     </key>
-    <column id="1175" parent="370" name="UID">
+    <column id="1173" parent="370" name="UID">
       <Position>1</Position>
       <DataType>int|0s</DataType>
       <NotNull>1</NotNull>
       <SequenceIdentity>null</SequenceIdentity>
     </column>
-    <column id="1176" parent="370" name="USERNAME">
+    <column id="1174" parent="370" name="USERNAME">
       <Position>2</Position>
       <DataType>varchar(20)|0s</DataType>
     </column>
-    <column id="1177" parent="370" name="PASSWORD">
+    <column id="1175" parent="370" name="PASSWORD">
       <Position>3</Position>
       <DataType>varchar(20)|0s</DataType>
     </column>
-    <column id="1178" parent="370" name="TOKEN">
+    <column id="1176" parent="370" name="TOKEN">
       <Position>4</Position>
       <DataType>varchar(42)|0s</DataType>
     </column>
-    <column id="1179" parent="370" name="USER_TYPE">
+    <column id="1177" parent="370" name="USER_TYPE">
       <Position>5</Position>
       <DataType>int|0s</DataType>
       <NotNull>1</NotNull>
       <DefaultExpression>0</DefaultExpression>
     </column>
-    <column id="1180" parent="370" name="LAST_AUTHORITY">
+    <column id="1178" parent="370" name="LAST_AUTHORITY">
       <Position>6</Position>
       <DataType>datetime|0s</DataType>
     </column>
-    <column id="1181" parent="370" name="GMT_CREATED">
+    <column id="1179" parent="370" name="GMT_CREATED">
       <Position>7</Position>
       <DataType>datetime|0s</DataType>
     </column>
-    <column id="1182" parent="370" name="GMT_MODIFIED">
+    <column id="1180" parent="370" name="GMT_MODIFIED">
       <Position>8</Position>
       <DataType>datetime|0s</DataType>
     </column>
-    <index id="1183" parent="370" name="USERNAME">
+    <index id="1181" parent="370" name="USERNAME">
       <ColNames>USERNAME</ColNames>
       <Unique>1</Unique>
       <Type>btree</Type>
     </index>
-    <key id="1184" parent="370" name="PRIMARY">
+    <key id="1182" parent="370" name="PRIMARY">
       <NameSurrogate>1</NameSurrogate>
       <ColNames>UID</ColNames>
       <Primary>1</Primary>
     </key>
-    <key id="1185" parent="370" name="USERNAME">
+    <key id="1183" parent="370" name="USERNAME">
       <ColNames>USERNAME</ColNames>
       <UnderlyingIndexName>USERNAME</UnderlyingIndexName>
     </key>
-    <trigger id="1186" parent="370" name="user_insert">
+    <trigger id="1184" parent="370" name="user_insert">
       <SourceTextLength>96</SourceTextLength>
       <Definer>root@localhost</Definer>
       <Turn>before-row</Turn>
       <Events>I</Events>
     </trigger>
-    <trigger id="1187" parent="370" name="user_update">
+    <trigger id="1185" parent="370" name="user_update">
       <SourceTextLength>71</SourceTextLength>
       <Definer>root@localhost</Definer>
       <Turn>before-row</Turn>

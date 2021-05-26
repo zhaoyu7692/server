@@ -2,6 +2,7 @@ package controller
 
 import (
 	"encoding/json"
+	"main/dao"
 	"main/model"
 	"main/mysql"
 	"main/utils"
@@ -20,6 +21,7 @@ type ContestResponseModel struct {
 		model.Problem
 		Index int64 `json:"index" db:"INDEX"`
 	} `json:"problems"`
+	Contest dao.ContestTableModel `json:"contest"`
 	model.ResponseBaseModel
 }
 
@@ -40,6 +42,7 @@ func contest(w http.ResponseWriter, r *http.Request) {
 	if err := mysql.DBConn.Select(&response.Problems, sql, cid); err != nil {
 		return
 	}
+	response.Contest = *dao.GetContestWithCid(cid)
 	response.Code = model.Success
 }
 

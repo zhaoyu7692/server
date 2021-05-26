@@ -34,7 +34,7 @@ const (
 	RegisterRepetitiveUsername
 )
 
-func AuthLogin(Uid int64, token string) AuthStatus {
+func AuthCheck(Uid int64, token string) AuthStatus {
 	var user model.User
 	if err := mysql.DBConn.Get(&user, "SELECT USER_TYPE, LAST_AUTHORITY FROM user WHERE UID = ? AND TOKEN = ?", Uid, token); err != nil {
 		return UnAuthority
