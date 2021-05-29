@@ -36,7 +36,7 @@ func (c *SubmitStatusController) ServeHTTP(w http.ResponseWriter, r *http.Reques
 	page := utils.StringConstraint(query.Get("page"), 1, math.MaxInt64, 1)
 	size := utils.StringConstraint(query.Get("size"), 20, 50, 20)
 	offset := (page - 1) * size
-	sql := "SELECT RID, CID,`INDEX`, s.UID, USERNAME, LANGUAGE, STATUS, RUN_TIME, RUN_MEMORY, SUBMIT_TIME FROM submit as s, user as u WHERE CID = ? AND s.UID = u.UID ORDER BY RID DESC LIMIT ?, ?"
+	sql := "SELECT RID, CID,`INDEX`, s.UID, USERNAME, LANGUAGE, STATUS, COMPILATION_MESSAGE, RUN_TIME, RUN_MEMORY, SUBMIT_TIME FROM submit as s, user as u WHERE CID = ? AND s.UID = u.UID ORDER BY RID DESC LIMIT ?, ?"
 	if err := mysql.DBConn.Select(&responseModel.SubmitStatus.ItemList, sql, cid, offset, size); err != nil {
 		return
 	}
