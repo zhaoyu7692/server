@@ -36,13 +36,6 @@ func (s Submit) MarshalJSON() ([]byte, error) {
 	})
 }
 
-//
-//type JudgeSubmitModel struct {
-//
-//	Submit
-//Problem
-//}
-//RID, CID, `INDEX`, CODE, STATUS, LANGUAGEp.PID, p.TIME_LIMIT, p.MEMORY_LIMIT
 type JudgeSubmitModel struct {
 	Rid         int64  `json:"rid" db:"RID"`
 	Cid         int64  `json:"cid" db:"CID"`
