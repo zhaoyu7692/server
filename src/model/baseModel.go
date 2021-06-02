@@ -26,9 +26,10 @@ type ResponsePaginationModel struct {
 type ResponseCode int
 
 const (
-	PublicFail ResponseCode = iota
-	Success
-	JumpLogin
+	PublicFail          ResponseCode = 0
+	Success             ResponseCode = 1
+	JumpLogin           ResponseCode = 2
+	UsernameUnavailable ResponseCode = 3
 )
 
 type ResponseBaseModel struct {
