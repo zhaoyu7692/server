@@ -3,6 +3,7 @@ package controller
 import (
 	"encoding/json"
 	"io/ioutil"
+	"main/dao"
 	"main/model"
 	"main/mysql"
 	"main/service"
@@ -97,6 +98,50 @@ func (c *SubmitController) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+type getSubmitDetailRequestModel struct {
+	Uid int64 `json:"uid"`
+	Rid int64 `json:"rid"`
+}
+
+type getSubmitDetailResponseModel struct {
+	SourceCode         string `json:"source_code"`
+	CompilationMessage string `json:"compilation_message"`
+	model.ResponseBaseModel
+}
+
+func getSubmitDetail(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		return
+	}
+	responseModel := getSubmitDetailResponseModel{}
+	responseModel.Code = model.PublicFail
+	defer func() {
+		if stream, err := json.Marshal(responseModel); err == nil {
+			_, _ = w.Write(stream)
+		}
+	}()
+	requestModel := getSubmitDetailRequestModel{}
+	if body, err := ioutil.ReadAll(r.Body); err == nil {
+		if err := json.Unmarshal(body, &requestModel); err != nil {
+			return
+		}
+	} else {
+		return
+	}
+	if submit := dao.GetSubmitWithRid(requestModel.Rid); submit != nil {
+		if submit.Uid != requestModel.Uid {
+			return
+		}
+		responseModel.SourceCode = submit.Code
+		responseModel.CompilationMessage = ""
+		if submit.CompilationMessage != nil {
+			responseModel.CompilationMessage = *submit.CompilationMessage
+		}
+		responseModel.Code = model.Success
+	}
+}
+
 func init() {
+	RegisterHandler("/getSubmitDetail/", getSubmitDetail)
 	RegisterController("/submit/", new(SubmitController))
 }

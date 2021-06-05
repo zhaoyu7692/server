@@ -79,7 +79,7 @@ func Register(username string, password string) (*model.User, RegisterStatus) {
 		Username: username,
 		Token:    uuid.NewV4().String(),
 	}
-	if result, err := mysql.DBConn.Exec("INSERT INTO user (USERNAME, PASSWORD, TOKEN) VALUES (?,?,?,?,?)", user.Username, password, user.Token); err == nil {
+	if result, err := mysql.DBConn.Exec("INSERT INTO user (USERNAME, PASSWORD, TOKEN) VALUES (?,?,?)", user.Username, password, user.Token); err == nil {
 		if user.Uid, err = result.LastInsertId(); err != nil {
 			if err := mysql.DBConn.Get(&user.Uid, "SELECT UID FROM user WHERE USERNAME = ?", user.Username); err == nil {
 				return &user, RegisterSuccess

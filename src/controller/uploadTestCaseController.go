@@ -40,7 +40,8 @@ func (c *UploadTestCaseController) ServeHTTP(w http.ResponseWriter, r *http.Requ
 	hashCode := hex.EncodeToString(hashBytes)
 
 	// 复制文件到目标目录
-	filePath := utils.GlobalConfig.Path.Data + hashCode + fileHeader.Filename
+	filePath := utils.GlobalConfig.Path.Data + hashCode
+	//+ fileHeader.Filename
 	fmt.Println(filePath)
 	err = ioutil.WriteFile(filePath, dataBuffer.Bytes(), os.ModePerm)
 	if err != nil {
@@ -66,7 +67,7 @@ func (c *UploadTestCaseController) ServeHTTP(w http.ResponseWriter, r *http.Requ
 }
 
 func init() {
-	//for i := 1; i < 8; i++ {
+	//for i := 1; i < 17; i++ {
 	//	files, _ := ioutil.ReadDir(fmt.Sprintf("%s%d", utils.GlobalConfig.Path.Data, i))
 	//	for _, file := range files {
 	//		data, _ := ioutil.ReadFile(fmt.Sprintf("%s%d/%s", utils.GlobalConfig.Path.Data, i, file.Name()))

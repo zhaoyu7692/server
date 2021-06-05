@@ -17,9 +17,9 @@ import (
 )
 
 func init() {
-	//RegisterHandler("/getProblem/", getProblem)
+	RegisterHandler("/getProblem/", getProblem)
 	RegisterHandler("/createProblem/", createProblem)
-	//RegisterHandler("/updateProblem/", updateProblem)
+	RegisterHandler("/updateProblem/", updateProblem)
 	RegisterHandler("/deleteProblem/", deleteProblem)
 	RegisterHandler("/getContest/", getContest)
 	RegisterHandler("/createContest/", createContest)
@@ -27,34 +27,39 @@ func init() {
 	RegisterHandler("/deleteContest/", deleteContest)
 }
 
-//type getProblemResponseModel struct {
-//	Problem   *dao.ProblemTableModel           `json:"problem"`
-//	Samples   *[]dao.SampleTableModel          `json:"samples"`
-//	Testcases *[]dao.TestcaseMappingTableModel `json:"testcases"`
-//	model.ResponseBaseModel
-//}
+type getProblemResponseModel struct {
+	Problem   *dao.ProblemTableModel           `json:"problem"`
+	Samples   *[]dao.SampleTableModel          `json:"samples"`
+	Testcases *[]dao.TestcaseMappingTableModel `json:"testcases"`
+	model.ResponseBaseModel
+}
 
-//func getProblem(w http.ResponseWriter, r *http.Request) {
-//	if r.Method != http.MethodGet {
-//		return
-//	}
-//	responseModel := getProblemResponseModel{}
-//	responseModel.Code = model.PublicFail
-//	defer func() {
-//		if stream, err := json.Marshal(responseModel); err == nil {
-//			_, _ = w.Write(stream)
-//		}
-//	}()
-//	query := r.URL.Query()
-//	pid := utils.StringConstraint(query.Get("pid"), 1, math.MaxInt64, math.MaxInt64)
-//	if pid == math.MaxInt64 {
-//		return
-//	}
-//	responseModel.Problem = dao.GetProblemWithPid(pid)
-//	responseModel.Samples = dao.GetSamplesWithPid(pid)
-//	responseModel.Testcases = dao.GetTestCasesWithPid(pid)
-//	responseModel.Code = model.Success
-//}
+func getProblem(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		return
+	}
+	responseModel := getProblemResponseModel{}
+	responseModel.Code = model.PublicFail
+	defer func() {
+		if stream, err := json.Marshal(responseModel); err == nil {
+			_, _ = w.Write(stream)
+		}
+	}()
+	query := r.URL.Query()
+	pid := utils.StringConstraint(query.Get("pid"), 1, math.MaxInt64, math.MaxInt64)
+	if pid == math.MaxInt64 {
+		return
+	}
+	responseModel.Problem = dao.GetProblemWithPid(pid)
+	responseModel.Samples = dao.GetSamplesWithPid(pid)
+	responseModel.Testcases = dao.GetTestCasesWithPid(pid)
+	responseModel.Code = model.Success
+}
+
+type testcaseModel struct {
+	Key  string `json:"key"`
+	Name string `json:"name"`
+}
 
 type createProblemRequestModel struct {
 	Title        string          `json:"title"`
@@ -65,7 +70,7 @@ type createProblemRequestModel struct {
 	Source       string          `json:"source"`
 	TimeLimit    int64           `json:"time_limit"`
 	MemoryLimit  int64           `json:"memory_limit"`
-	FilenameList []string        `json:"filename_list"`
+	FilenameList []testcaseModel       `json:"filename_list"`
 	Samples      []model.Example `json:"samples"`
 	User         model.User      `json:"user"`
 }
@@ -142,13 +147,14 @@ func createProblem(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	for _, hash := range requestModel.FilenameList {
+	for _, fileModel := range requestModel.FilenameList {
 		resourceModel := model.ResourceMappingModel{}
-		if err = mysql.DBConn.Get(&resourceModel, "SELECT * FROM resource_mapping WHERE SHA_KEY = ?", hash); err != nil {
+		if err = mysql.DBConn.Get(&resourceModel, "SELECT * FROM resource_mapping WHERE SHA_KEY = ?", fileModel.Key); err != nil {
 			return
 		}
 
-		realPath := fmt.Sprintf("%s%d/%s", utils.GlobalConfig.Path.Data, pid, resourceModel.Filename)
+		//realPath := fmt.Sprintf("%s%d/%s", utils.GlobalConfig.Path.Data, pid, resourceModel.Filename)
+		realPath := fmt.Sprintf("%s%d/%s", utils.GlobalConfig.Path.Data, pid, fileModel.Name)
 		data, err := ioutil.ReadFile(resourceModel.Path)
 		if err != nil {
 			w.WriteHeader(500)
@@ -159,7 +165,7 @@ func createProblem(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if _, err = tx.Exec("INSERT INTO testcase_mapping (PID, FILENAME, `KEY`, PATH) VALUES (?,?,?,?)", pid, resourceModel.Filename, hash, realPath); err != nil {
+		if _, err = tx.Exec("INSERT INTO testcase_mapping (PID, FILENAME, `KEY`, PATH) VALUES (?,?,?,?)", pid, fileModel.Name, fileModel.Key, realPath); err != nil {
 			return
 		}
 	}
@@ -171,9 +177,108 @@ func createProblem(w http.ResponseWriter, r *http.Request) {
 	responseModel.Code = model.Success
 }
 
-//func updateProblem(w http.ResponseWriter, r *http.Request) {
-//
-//}
+type updateProblemRequestModel struct {
+	Pid          int64           `json:"pid"`
+	Title        string          `json:"title"`
+	Description  string          `json:"description"`
+	Difficulty   int64           `json:"difficulty"`
+	Input        string          `json:"input"`
+	Output       string          `json:"output"`
+	Source       string          `json:"source"`
+	TimeLimit    int64           `json:"time_limit"`
+	MemoryLimit  int64           `json:"memory_limit"`
+	FilenameList []testcaseModel `json:"filename_list"`
+	Samples      []model.Example `json:"samples"`
+	User         model.User      `json:"user"`
+}
+
+type updateProblemResponseModel struct {
+	model.ResponseBaseModel
+}
+
+func updateProblem(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		return
+	}
+	responseModel := updateProblemResponseModel{}
+	responseModel.Code = model.PublicFail
+	defer func() {
+		if data, err := json.Marshal(responseModel); err == nil {
+			_, _ = w.Write(data)
+		}
+	}()
+
+	requestModel := updateProblemRequestModel{}
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return
+	}
+	if err = json.Unmarshal(body, &requestModel); err != nil {
+		return
+	}
+	if service.AuthCheck(requestModel.User.Uid, requestModel.User.Token) != service.AuthorityAdmin {
+		responseModel.Message = "没有权限进行该操作"
+		return
+	}
+	problemLock.Lock()
+	defer problemLock.Unlock()
+	tx, err := mysql.DBConn.Begin()
+	if err != nil {
+		return
+	}
+	defer func() {
+		if responseModel.Code != model.Success {
+			_ = tx.Rollback()
+		}
+	}()
+
+	sql := "UPDATE problem SET TITLE = ?, DESCRIPTION = ?, DIFF = ?, INPUT = ?, OUTPUT = ?, SOURCE = ?, TIME_LIMIT = ?, MEMORY_LIMIT = ? WHERE PID = ?"
+	if _, err := tx.Exec(sql, requestModel.Title, requestModel.Description, requestModel.Difficulty, requestModel.Input, requestModel.Output, requestModel.Source, requestModel.TimeLimit, requestModel.MemoryLimit, requestModel.Pid); err != nil {
+		return
+	}
+	// examples
+	if _, err := tx.Exec("DELETE FROM sample WHERE PID = ?", requestModel.Pid); err != nil {
+		return
+	}
+	for index, sample := range requestModel.Samples {
+		if _, err = tx.Exec("INSERT INTO sample (PID, SID, INPUT, OUTPUT) VALUES (?,?,?,?)", requestModel.Pid, index+1, sample.Input, sample.Output); err != nil {
+			return
+		}
+	}
+	// mapping file
+	_, err = os.Lstat(fmt.Sprintf("%s%d", utils.GlobalConfig.Path.Data, requestModel.Pid))
+	if os.IsNotExist(err) {
+		if err := os.MkdirAll(fmt.Sprintf("%s%d", utils.GlobalConfig.Path.Data, requestModel.Pid), os.ModePerm); err != nil {
+			return
+		}
+	}
+	if _, err := tx.Exec("DELETE FROM testcase_mapping WHERE PID = ?", requestModel.Pid); err != nil {
+		return
+	}
+	for _, fileModel := range requestModel.FilenameList {
+		resourceModel := model.ResourceMappingModel{}
+		if err = mysql.DBConn.Get(&resourceModel, "SELECT * FROM resource_mapping WHERE SHA_KEY = ?", fileModel.Key); err != nil {
+			return
+		}
+		realPath := fmt.Sprintf("%s%d/%s", utils.GlobalConfig.Path.Data, requestModel.Pid, fileModel.Name)
+		data, err := ioutil.ReadFile(resourceModel.Path)
+		if err != nil {
+			w.WriteHeader(500)
+			return
+		}
+		if err := ioutil.WriteFile(realPath, data, os.ModePerm); err != nil {
+			w.WriteHeader(500)
+			return
+		}
+		if _, err = tx.Exec("INSERT INTO testcase_mapping (PID, FILENAME, `KEY`, PATH) VALUES (?,?,?,?)", requestModel.Pid, fileModel.Name, fileModel.Key, realPath); err != nil {
+			return
+		}
+	}
+	if err = tx.Commit(); err != nil {
+		return
+	}
+	responseModel.Code = model.Success
+}
 
 type deleteProblemRequestModel struct {
 	Pid  int64      `json:"pid"`
