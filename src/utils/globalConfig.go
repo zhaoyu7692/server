@@ -11,7 +11,7 @@ import (
 type OpenJudge struct {
 	Host     string
 	Port     string
-	DataPath string
+	//DataPath string
 }
 
 type MysqlConfig struct {

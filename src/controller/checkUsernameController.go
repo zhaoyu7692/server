@@ -46,6 +46,7 @@ func (c *CheckUsernameController) ServeHTTP(w http.ResponseWriter, r *http.Reque
 		response.Code = model.Success
 		response.Message = "用户名可用"
 	} else {
+		response.Code = model.UsernameUnavailable
 		response.Message = "用户名已存在"
 	}
 }

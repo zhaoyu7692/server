@@ -18,7 +18,7 @@ func StashSubmit(submit *model.JudgeSubmitModel) {
 }
 
 func FetchSubmit() *model.JudgeSubmitModel {
-	fmt.Println(submitPool)
+	//fmt.Println(submitPool)
 	submitPoolMutex.Lock()
 	defer submitPoolMutex.Unlock()
 	if len(submitPool) <= 0 {

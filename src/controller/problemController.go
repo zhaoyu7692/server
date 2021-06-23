@@ -35,7 +35,7 @@ func (c *ProblemController) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err := mysql.DBConn.Get(&responseModel.Problem, sql, cid, index); err != nil {
 		return
 	}
-	sql = "SELECT INPUT, OUTPUT FROM SAMPLE as s, contest_problem_mapping as cp WHERE s.PID = cp.PID AND cp.CID = ? AND cp.`INDEX` = ?"
+	sql = "SELECT INPUT, OUTPUT FROM sample as s, contest_problem_mapping as cp WHERE s.PID = cp.PID AND cp.CID = ? AND cp.`INDEX` = ?"
 	if err := mysql.DBConn.Select(&responseModel.Problem.Sample, sql, cid, index); err != nil {
 		return
 	}

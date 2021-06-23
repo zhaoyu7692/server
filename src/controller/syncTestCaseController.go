@@ -79,7 +79,8 @@ func (c *DownloadTestCaseController) ServeHTTP(w http.ResponseWriter, r *http.Re
 	query := r.URL.Query()
 	pid := utils.StringConstraint(query.Get("pid"), 1, math.MaxInt64, math.MaxInt64)
 	filename := query.Get("filename")
-	data, err := ioutil.ReadFile(fmt.Sprintf("%s%d\\%s", utils.GlobalConfig.Path.Data, pid, filename))
+	filepath := fmt.Sprintf("%s%d/%s", utils.GlobalConfig.Path.Data, pid, filename)
+	data, err := ioutil.ReadFile(filepath)
 	if err == nil {
 		_, err = w.Write(data)
 		if err == nil {
