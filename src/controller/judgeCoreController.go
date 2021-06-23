@@ -9,6 +9,7 @@ import (
 	"main/mysql"
 	"main/service"
 	"net/http"
+	"time"
 )
 
 type judgerRequestModel struct {
@@ -24,7 +25,7 @@ type JudgerController struct {
 }
 
 func (c *JudgerController) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("POST")
+	//fmt.Println("POST")
 	if r.Method != "POST" {
 		return
 	}
@@ -42,23 +43,25 @@ func (c *JudgerController) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-	fmt.Println(string(body))
+	//fmt.Println(string(body))
 	request := judgerRequestModel{}
 	if err := json.Unmarshal(body, &request); err != nil {
 		return
 	}
 	for i := 0; i < len(request.Status); i++ {
 		status := request.Status[i]
+		fmt.Printf("[%s] Receive: [Rid:%d] [Status:%d]\n", time.Now().Format("2006-01-02 15:04:05"), status.Rid, status.Status)
 		sql := "UPDATE submit SET STATUS = ?, RUN_TIME = ? ,RUN_MEMORY = ?, COMPILATION_MESSAGE = ? WHERE RID = ?"
 		_, _ = mysql.DBConn.Exec(sql, status.Status, status.TimeCost, status.MemoryCost, status.CompilationMessage, status.Rid)
 		service.UpdateRank(status.Rid)
 	}
-	for ; request.JudgingCount < 6; request.JudgingCount++ {
-		var submit *model.JudgeSubmitModel
-		if submit = service.FetchSubmit(); submit == nil {
-			break
+	if request.JudgingCount < 6 {
+		//for ; request.JudgingCount < 6; request.JudgingCount++ {
+		//	var submit *model.JudgeSubmitModel
+		if submit := service.FetchSubmit(); submit != nil {
+			fmt.Printf("[%s] Send: [Rid:%d]\n", time.Now().Format("2006-01-02 15:04:05"), submit.Rid)
+			response.Problems = append(response.Problems, *submit)
 		}
-		response.Problems = append(response.Problems, *submit)
 	}
 }
 

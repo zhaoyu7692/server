@@ -3,6 +3,7 @@ package controller
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/gomodule/redigo/redis"
 	"main/dao"
 	"main/model"
 	"main/mysql"
@@ -102,7 +103,6 @@ type contestRankResponseModel struct {
 	model.ResponseBaseModel
 }
 
-
 func contestRank(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
 		return
@@ -115,13 +115,15 @@ func contestRank(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// TODO: redis
-	//if reply, err := redis.Bytes(redispool.Get().Do("GET", fmt.Sprintf("contest_rank_key_cid_%d", cid))); err == nil {
-	//	_, _ = w.Write(reply)
-	//	return
-	//}
+	conn := redispool.Get()
+	defer func() { _ = conn.Close() }()
+	if reply, err := redis.Bytes(conn.Do("GET", fmt.Sprintf("contest_rank_key_cid_%d", cid))); err == nil {
+		_, _ = w.Write(reply)
+		return
+	}
 	defer func() {
 		if stream, err := json.Marshal(response); err == nil {
-			_, _ = redispool.Get().Do("SET", fmt.Sprintf("contest_rank_key_cid_%d", cid), stream)
+			_, _ = conn.Do("SET", fmt.Sprintf("contest_rank_key_cid_%d", cid), stream)
 			_, _ = w.Write(stream)
 		}
 	}()

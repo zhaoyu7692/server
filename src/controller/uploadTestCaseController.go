@@ -67,16 +67,5 @@ func (c *UploadTestCaseController) ServeHTTP(w http.ResponseWriter, r *http.Requ
 }
 
 func init() {
-	//for i := 1; i < 17; i++ {
-	//	files, _ := ioutil.ReadDir(fmt.Sprintf("%s%d", utils.GlobalConfig.Path.Data, i))
-	//	for _, file := range files {
-	//		data, _ := ioutil.ReadFile(fmt.Sprintf("%s%d/%s", utils.GlobalConfig.Path.Data, i, file.Name()))
-	//		hash := sha256.New()
-	//		hash.Write(data)
-	//		hashBytes := hash.Sum(nil)
-	//		_, err := mysql.DBConn.Exec("INSERT INTO testcase_mapping (PID, FILENAME, `KEY`, PATH) VALUES (?,?,?,?)", i, file.Name(), hex.EncodeToString(hashBytes), fmt.Sprintf("%s%d/%s", utils.GlobalConfig.Path.Data, i, file.Name()))
-	//		fmt.Println(err)
-	//	}
-	//}
 	RegisterController("/uploadTestCase/", new(UploadTestCaseController))
 }
